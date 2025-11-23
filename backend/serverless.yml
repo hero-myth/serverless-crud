@@ -1,0 +1,155 @@
+service: sguru-crud-api
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  logs:
+    restApi: true
+  environment:
+    ITEMS_TABLE_NAME: ${self:custom.itemsTableName}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:custom.itemsTableName}
+
+custom:
+  stage: ${sls:stage}
+  itemsTableName: ${self:service}-${sls:stage}-items
+  cognito:
+    userPoolName: ${self:service}-${sls:stage}-users
+    userPoolClientName: ${self:service}-${sls:stage}-web
+
+functions:
+  createItem:
+    handler: src/handlers/createItem.handler
+    events:
+      - http:
+          path: items
+          method: post
+          cors: true
+          authorizer:
+            type: COGNITO_USER_POOLS
+            userPoolIds:
+              - Ref: UserPool
+  getItem:
+    handler: src/handlers/getItem.handler
+    events:
+      - http:
+          path: items/{id}
+          method: get
+          cors: true
+          authorizer:
+            type: COGNITO_USER_POOLS
+            userPoolIds:
+              - Ref: UserPool
+  listItems:
+    handler: src/handlers/listItems.handler
+    events:
+      - http:
+          path: items
+          method: get
+          cors: true
+          authorizer:
+            type: COGNITO_USER_POOLS
+            userPoolIds:
+              - Ref: UserPool
+  updateItem:
+    handler: src/handlers/updateItem.handler
+    events:
+      - http:
+          path: items/{id}
+          method: put
+          cors: true
+          authorizer:
+            type: COGNITO_USER_POOLS
+            userPoolIds:
+              - Ref: UserPool
+  deleteItem:
+    handler: src/handlers/deleteItem.handler
+    events:
+      - http:
+          path: items/{id}
+          method: delete
+          cors: true
+          authorizer:
+            type: COGNITO_USER_POOLS
+            userPoolIds:
+              - Ref: UserPool
+
+resources:
+  Resources:
+    ItemsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.itemsTableName}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+    UserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: ${self:custom.cognito.userPoolName}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireLowercase: true
+            RequireNumbers: true
+            RequireSymbols: false
+            RequireUppercase: true
+    UserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: ${self:custom.cognito.userPoolClientName}
+        UserPoolId:
+          Ref: UserPool
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+          - ALLOW_USER_SRP_AUTH
+        PreventUserExistenceErrors: ENABLED
+  Outputs:
+    ApiUrl:
+      Description: "API Gateway REST endpoint base URL"
+      Value:
+        Fn::Join:
+          - ""
+          - - https://
+            - Ref: ApiGatewayRestApi
+            - .execute-api.
+            - ${aws:region}
+            - .amazonaws.com/
+            - ${sls:stage}
+    DynamoTableName:
+      Description: "DynamoDB table name"
+      Value: ${self:custom.itemsTableName}
+    CognitoUserPoolId:
+      Description: "Cognito User Pool ID"
+      Value:
+        Ref: UserPool
+    CognitoUserPoolClientId:
+      Description: "Cognito User Pool Client ID"
+      Value:
+        Ref: UserPoolClient
+
+

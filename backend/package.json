@@ -1,0 +1,27 @@
+{
+  "name": "sguru-crud-backend",
+  "version": "1.0.0",
+  "description": "Serverless Framework REST API with CRUD over DynamoDB, Cognito auth, multi-stage",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove:dev": "serverless remove --stage dev",
+    "remove:prod": "serverless remove --stage prod",
+    "test": "node --version"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.679.0",
+    "@aws-sdk/lib-dynamodb": "^3.679.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "serverless": "^3.39.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
+
+
