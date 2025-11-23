@@ -23,6 +23,10 @@
     "aws-amplify": "^6.3.6",
     "dotenv": "^16.4.5"
   },
+  "optionalDependencies": {},
+  "loadtest": {
+    "howto": "Use k6 CLI. Example: k6 run --env API_BASE_URL=... --env TOKEN=... --env VUS=10 --env DURATION=2m loadtest/k6-crud.js"
+  },
   "engines": {
     "node": ">=18"
   }
