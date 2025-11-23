@@ -21,7 +21,17 @@ export default function Signup() {
 			setStep(2);
 		} catch (err) {
 			console.error(err);
-			setError("Signup failed. Try a stronger password.");
+			const name = err?.name || "";
+			const msg = err?.message || "";
+			if (name === "InvalidPasswordException") {
+				setError(msg || "Password does not meet policy requirements.");
+			} else if (name === "UsernameExistsException") {
+				setError("An account with this email already exists. Please log in.");
+			} else if (name === "InvalidParameterException") {
+				setError(msg || "Invalid input. Check your email and password.");
+			} else {
+				setError(msg || "Signup failed. Please try again.");
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -36,7 +46,15 @@ export default function Signup() {
 			navigate("/login");
 		} catch (err) {
 			console.error(err);
-			setError("Invalid confirmation code.");
+			const name = err?.name || "";
+			const msg = err?.message || "";
+			if (name === "CodeMismatchException") {
+				setError("Invalid confirmation code.");
+			} else if (name === "ExpiredCodeException") {
+				setError("The confirmation code has expired. Please request a new one.");
+			} else {
+				setError(msg || "Could not confirm signup.");
+			}
 		} finally {
 			setLoading(false);
 		}

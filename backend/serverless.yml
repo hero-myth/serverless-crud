@@ -11,6 +11,7 @@ provider:
   environment:
     ITEMS_TABLE_NAME: ${self:custom.itemsTableName}
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: "1"
+    CORS_ORIGIN: ${env:CORS_ORIGIN, '*'}
   iam:
     role:
       statements:

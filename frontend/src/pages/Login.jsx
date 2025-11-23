@@ -19,7 +19,17 @@ export default function Login() {
 			navigate("/items");
 		} catch (err) {
 			console.error(err);
-			setError("Login failed. Check your email/password.");
+			const name = err?.name || "";
+			const msg = err?.message || "";
+			if (name === "UserNotFoundException") {
+				setError("No account found for this email. Please sign up first.");
+			} else if (name === "UserNotConfirmedException") {
+				setError("Your account is not confirmed. Please check your email for the confirmation code.");
+			} else if (name === "NotAuthorizedException") {
+				setError("Incorrect email or password.");
+			} else {
+				setError(msg || "Login failed. Please try again.");
+			}
 		} finally {
 			setLoading(false);
 		}

@@ -1,20 +1,15 @@
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb, getTableName } from "../lib/dynamo.js";
-
-const respond = (statusCode, body) => ({
-	statusCode,
-	headers: { "Content-Type": "application/json" },
-	body: JSON.stringify(body)
-});
+import { json } from "../lib/http.js";
 
 export const handler = async (event) => {
 	try {
 		const id = event.pathParameters?.id;
-		if (!id) return respond(400, { message: "Missing id" });
+		if (!id) return json(400, { message: "Missing id" });
 		const data = typeof event.body === "string" ? JSON.parse(event.body || "{}") : event.body || {};
 		const { title, description } = data;
 		if (!title && !description) {
-			return respond(400, { message: "Provide at least one of: title, description" });
+			return json(400, { message: "Provide at least one of: title, description" });
 		}
 		const now = new Date().toISOString();
 		const updateParts = [];
@@ -42,11 +37,11 @@ export const handler = async (event) => {
 			ConditionExpression: "attribute_exists(id)",
 			ReturnValues: "ALL_NEW"
 		}));
-		return respond(200, res.Attributes || {});
+		return json(200, res.Attributes || {});
 	} catch (err) {
 		console.error(err);
 		const code = err?.name === "ConditionalCheckFailedException" ? 404 : 500;
-		return respond(code, { message: code === 404 ? "Not found" : "Failed to update item" });
+		return json(code, { message: code === 404 ? "Not found" : "Failed to update item" });
 	}
 };
 

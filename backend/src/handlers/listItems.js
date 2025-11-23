@@ -1,11 +1,6 @@
 import { ScanCommand } from "@aws-sdk/lib-dynamodb";
 import { ddb, getTableName } from "../lib/dynamo.js";
-
-const respond = (statusCode, body) => ({
-	statusCode,
-	headers: { "Content-Type": "application/json" },
-	body: JSON.stringify(body)
-});
+import { json } from "../lib/http.js";
 
 export const handler = async () => {
 	try {
@@ -13,10 +8,10 @@ export const handler = async () => {
 			TableName: getTableName()
 		}));
 		const items = (res.Items || []).sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
-		return respond(200, { items });
+		return json(200, { items });
 	} catch (err) {
 		console.error(err);
-		return respond(500, { message: "Failed to list items" });
+		return json(500, { message: "Failed to list items" });
 	}
 };
 
