@@ -35,6 +35,13 @@ import { useState } from "react";
 
 export default function App() {
 	// Amplify is configured by a bootstrap import in main.jsx
+	const location = useLocation();
+	const [auth, setAuth] = useState(false);
+	useEffect(() => {
+		(async () => {
+			setAuth(await isAuthenticated());
+		})();
+	}, [location.pathname]);
 
 	const handleLogout = async () => {
 		try {
@@ -53,7 +60,11 @@ export default function App() {
 						Serverless CRUD
 					</Typography>
 					<Button color="inherit" component={RouterLink} to="/">Home</Button>
-					<Button color="inherit" onClick={handleLogout}>Logout</Button>
+					{auth ? (
+                        <Button color="inherit" onClick={handleLogout}>Logout</Button>
+					) : (
+                        <Button color="inherit" component={RouterLink} to="/login">Login</Button>
+					)}
 				</Toolbar>
 			</AppBar>
 			<Container sx={{ py: 3, flexGrow: 1 }}>
