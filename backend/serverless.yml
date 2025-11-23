@@ -41,8 +41,10 @@ functions:
           cors: true
           authorizer:
             type: COGNITO_USER_POOLS
-            userPoolIds:
-              - Ref: UserPool
+            userPoolArn:
+              - Fn::GetAtt:
+                  - UserPool
+                  - Arn
   getItem:
     handler: src/handlers/getItem.handler
     events:
@@ -52,8 +54,10 @@ functions:
           cors: true
           authorizer:
             type: COGNITO_USER_POOLS
-            userPoolIds:
-              - Ref: UserPool
+            userPoolArn:
+              - Fn::GetAtt:
+                  - UserPool
+                  - Arn
   listItems:
     handler: src/handlers/listItems.handler
     events:
@@ -63,8 +67,10 @@ functions:
           cors: true
           authorizer:
             type: COGNITO_USER_POOLS
-            userPoolIds:
-              - Ref: UserPool
+            userPoolArn:
+              - Fn::GetAtt:
+                  - UserPool
+                  - Arn
   updateItem:
     handler: src/handlers/updateItem.handler
     events:
@@ -74,8 +80,10 @@ functions:
           cors: true
           authorizer:
             type: COGNITO_USER_POOLS
-            userPoolIds:
-              - Ref: UserPool
+            userPoolArn:
+              - Fn::GetAtt:
+                  - UserPool
+                  - Arn
   deleteItem:
     handler: src/handlers/deleteItem.handler
     events:
@@ -85,8 +93,10 @@ functions:
           cors: true
           authorizer:
             type: COGNITO_USER_POOLS
-            userPoolIds:
-              - Ref: UserPool
+            userPoolArn:
+              - Fn::GetAtt:
+                  - UserPool
+                  - Arn
 
 resources:
   Resources:
