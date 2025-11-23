@@ -32,6 +32,7 @@ custom:
     userPoolName: ${self:service}-${sls:stage}-users
     userPoolClientName: ${self:service}-${sls:stage}-web
   frontendBucketName: ${self:service}-${sls:stage}-frontend-${aws:accountId}-${aws:region}
+  cloudfrontEnabled: ${env:CLOUDFRONT_ENABLED, 'false'}
 
 functions:
   createItem:
@@ -97,6 +98,15 @@ functions:
 
 resources:
   Resources:
+    Conditions:
+      CreateCloudFront:
+        Fn::Equals:
+          - ${self:custom.cloudfrontEnabled}
+          - "true"
+      UseS3Website:
+        Fn::Equals:
+          - ${self:custom.cloudfrontEnabled}
+          - "false"
     ItemsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -141,11 +151,9 @@ resources:
         BucketName: ${self:custom.frontendBucketName}
         VersioningConfiguration:
           Status: Suspended
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: true
-          BlockPublicPolicy: true
-          IgnorePublicAcls: true
-          RestrictPublicBuckets: true
+        WebsiteConfiguration:
+          IndexDocument: index.html
+          ErrorDocument: index.html
         Tags:
           - Key: service
             Value: ${self:service}
@@ -153,6 +161,7 @@ resources:
             Value: ${sls:stage}
     FrontendOAC:
       Type: AWS::CloudFront::OriginAccessControl
+      Condition: CreateCloudFront
       Properties:
         OriginAccessControlConfig:
           Name: ${self:service}-${sls:stage}-oac
@@ -162,6 +171,7 @@ resources:
           SigningProtocol: sigv4
     FrontendDistribution:
       Type: AWS::CloudFront::Distribution
+      Condition: CreateCloudFront
       Properties:
         DistributionConfig:
           Enabled: true
@@ -196,8 +206,9 @@ resources:
           HttpVersion: http2
           ViewerCertificate:
             CloudFrontDefaultCertificate: true
-    FrontendBucketPolicy:
+    FrontendBucketPolicyForCF:
       Type: AWS::S3::BucketPolicy
+      Condition: CreateCloudFront
       Properties:
         Bucket: !Ref FrontendBucket
         PolicyDocument:
@@ -216,6 +227,19 @@ resources:
               Condition:
                 StringEquals:
                   AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
+    FrontendBucketPublicRead:
+      Type: AWS::S3::BucketPolicy
+      Condition: UseS3Website
+      Properties:
+        Bucket: !Ref FrontendBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadObjects
+              Effect: Allow
+              Principal: "*"
+              Action: "s3:GetObject"
+              Resource: !Sub arn:aws:s3:::${FrontendBucket}/*
   Outputs:
     ApiUrl:
       Description: "API Gateway REST endpoint base URL"
@@ -244,9 +268,14 @@ resources:
       Value: ${self:custom.frontendBucketName}
     CloudFrontDistributionId:
       Description: "CloudFront distribution id for frontend"
+      Condition: CreateCloudFront
       Value: !Ref FrontendDistribution
     FrontendUrl:
       Description: "Frontend CloudFront URL"
+      Condition: CreateCloudFront
       Value: !Sub https://${FrontendDistribution.DomainName}
+    WebsiteUrl:
+      Description: "S3 static website URL (used when CloudFront disabled)"
+      Value: !Sub http://${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com
 
 
