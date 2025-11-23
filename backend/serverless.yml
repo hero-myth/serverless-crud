@@ -40,11 +40,10 @@ functions:
           method: post
           cors: true
           authorizer:
+            name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
             arn:
-              Fn::GetAtt:
-                - UserPool
-                - Arn
+              Fn::GetAtt: [UserPool, Arn]
   getItem:
     handler: src/handlers/getItem.handler
     events:
@@ -53,11 +52,10 @@ functions:
           method: get
           cors: true
           authorizer:
+            name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
             arn:
-              Fn::GetAtt:
-                - UserPool
-                - Arn
+              Fn::GetAtt: [UserPool, Arn]
   listItems:
     handler: src/handlers/listItems.handler
     events:
@@ -66,11 +64,10 @@ functions:
           method: get
           cors: true
           authorizer:
+            name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
             arn:
-              Fn::GetAtt:
-                - UserPool
-                - Arn
+              Fn::GetAtt: [UserPool, Arn]
   updateItem:
     handler: src/handlers/updateItem.handler
     events:
@@ -79,11 +76,10 @@ functions:
           method: put
           cors: true
           authorizer:
+            name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
             arn:
-              Fn::GetAtt:
-                - UserPool
-                - Arn
+              Fn::GetAtt: [UserPool, Arn]
   deleteItem:
     handler: src/handlers/deleteItem.handler
     events:
@@ -92,11 +88,10 @@ functions:
           method: delete
           cors: true
           authorizer:
+            name: CognitoAuthorizer
             type: COGNITO_USER_POOLS
             arn:
-              Fn::GetAtt:
-                - UserPool
-                - Arn
+              Fn::GetAtt: [UserPool, Arn]
 
 resources:
   Resources:
