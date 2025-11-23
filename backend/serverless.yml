@@ -97,16 +97,16 @@ functions:
               Fn::GetAtt: [UserPool, Arn]
 
 resources:
+  Conditions:
+    CreateCloudFront:
+      Fn::Equals:
+        - ${self:custom.cloudfrontEnabled}
+        - "true"
+    UseS3Website:
+      Fn::Equals:
+        - ${self:custom.cloudfrontEnabled}
+        - "false"
   Resources:
-    Conditions:
-      CreateCloudFront:
-        Fn::Equals:
-          - ${self:custom.cloudfrontEnabled}
-          - "true"
-      UseS3Website:
-        Fn::Equals:
-          - ${self:custom.cloudfrontEnabled}
-          - "false"
     ItemsTable:
       Type: AWS::DynamoDB::Table
       Properties:
