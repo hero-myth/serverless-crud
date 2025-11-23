@@ -97,148 +97,148 @@ functions:
               Fn::GetAtt: [UserPool, Arn]
 
 resources:
-  Conditions:
-    CreateCloudFront:
-      Fn::Equals:
-        - ${self:custom.cloudfrontEnabled}
-        - "true"
-    UseS3Website:
-      Fn::Equals:
-        - ${self:custom.cloudfrontEnabled}
-        - "false"
-  Resources:
-    ${file(resources/core.yml)}
-    FrontendBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.frontendBucketName}
-        VersioningConfiguration:
-          Status: Suspended
-        WebsiteConfiguration:
-          IndexDocument: index.html
-          ErrorDocument: index.html
-        Tags:
-          - Key: service
-            Value: ${self:service}
-          - Key: stage
-            Value: ${sls:stage}
-    FrontendOAC:
-      Type: AWS::CloudFront::OriginAccessControl
-      Condition: CreateCloudFront
-      Properties:
-        OriginAccessControlConfig:
-          Name: ${self:service}-${sls:stage}-oac
-          Description: Origin access control for S3 frontend bucket
-          OriginAccessControlOriginType: s3
-          SigningBehavior: always
-          SigningProtocol: sigv4
-    FrontendDistribution:
-      Type: AWS::CloudFront::Distribution
-      Condition: CreateCloudFront
-      Properties:
-        DistributionConfig:
-          Enabled: true
-          Comment: ${self:service} ${sls:stage} frontend
-          DefaultRootObject: index.html
-          Aliases: []
-          Origins:
-            - Id: FrontendS3Origin
-              DomainName: !GetAtt FrontendBucket.RegionalDomainName
-              S3OriginConfig: {}
-              OriginAccessControlId: !Ref FrontendOAC
-          DefaultCacheBehavior:
-            TargetOriginId: FrontendS3Origin
-            ViewerProtocolPolicy: redirect-to-https
-            AllowedMethods: [GET, HEAD, OPTIONS]
-            CachedMethods: [GET, HEAD, OPTIONS]
-            Compress: true
-            ForwardedValues:
-              QueryString: true
-              Cookies:
-                Forward: none
-          PriceClass: PriceClass_100
-          CustomErrorResponses:
-            - ErrorCode: 403
-              ResponseCode: 200
-              ResponsePagePath: /index.html
-              ErrorCachingMinTTL: 0
-            - ErrorCode: 404
-              ResponseCode: 200
-              ResponsePagePath: /index.html
-              ErrorCachingMinTTL: 0
-          HttpVersion: http2
-          ViewerCertificate:
-            CloudFrontDefaultCertificate: true
-    FrontendBucketPolicyForCF:
-      Type: AWS::S3::BucketPolicy
-      Condition: CreateCloudFront
-      Properties:
-        Bucket: !Ref FrontendBucket
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: AllowCloudFrontRead
-              Effect: Allow
-              Principal:
-                Service: cloudfront.amazonaws.com
-              Action:
-                - s3:GetObject
-                - s3:ListBucket
-              Resource:
-                - !Sub arn:aws:s3:::${FrontendBucket}
-                - !Sub arn:aws:s3:::${FrontendBucket}/*
-              Condition:
-                StringEquals:
-                  AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
-    FrontendBucketPublicRead:
-      Type: AWS::S3::BucketPolicy
-      Condition: UseS3Website
-      Properties:
-        Bucket: !Ref FrontendBucket
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: PublicReadObjects
-              Effect: Allow
-              Principal: "*"
-              Action: "s3:GetObject"
-              Resource: !Sub arn:aws:s3:::${FrontendBucket}/*
-  Outputs:
-    ApiUrl:
-      Description: "API Gateway REST endpoint base URL"
-      Value:
-        Fn::Join:
-          - ""
-          - - https://
-            - Ref: ApiGatewayRestApi
-            - .execute-api.
-            - ${aws:region}
-            - .amazonaws.com/
-            - ${sls:stage}
-    DynamoTableName:
-      Description: "DynamoDB table name"
-      Value: ${self:custom.itemsTableName}
-    CognitoUserPoolId:
-      Description: "Cognito User Pool ID"
-      Value:
-        Ref: UserPool
-    CognitoUserPoolClientId:
-      Description: "Cognito User Pool Client ID"
-      Value:
-        Ref: UserPoolClient
-    FrontendBucketName:
-      Description: "S3 bucket for hosting frontend artifacts"
-      Value: ${self:custom.frontendBucketName}
-    CloudFrontDistributionId:
-      Description: "CloudFront distribution id for frontend"
-      Condition: CreateCloudFront
-      Value: !Ref FrontendDistribution
-    FrontendUrl:
-      Description: "Frontend CloudFront URL"
-      Condition: CreateCloudFront
-      Value: !Sub https://${FrontendDistribution.DomainName}
-    WebsiteUrl:
-      Description: "S3 static website URL (used when CloudFront disabled)"
-      Value: !Sub http://${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com
+  - Conditions:
+      CreateCloudFront:
+        Fn::Equals:
+          - ${self:custom.cloudfrontEnabled}
+          - "true"
+      UseS3Website:
+        Fn::Equals:
+          - ${self:custom.cloudfrontEnabled}
+          - "false"
+  - Resources: ${file(resources/core.yml)}
+  - Resources:
+      FrontendBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+          BucketName: ${self:custom.frontendBucketName}
+          VersioningConfiguration:
+            Status: Suspended
+          WebsiteConfiguration:
+            IndexDocument: index.html
+            ErrorDocument: index.html
+          Tags:
+            - Key: service
+              Value: ${self:service}
+            - Key: stage
+              Value: ${sls:stage}
+      FrontendOAC:
+        Type: AWS::CloudFront::OriginAccessControl
+        Condition: CreateCloudFront
+        Properties:
+          OriginAccessControlConfig:
+            Name: ${self:service}-${sls:stage}-oac
+            Description: Origin access control for S3 frontend bucket
+            OriginAccessControlOriginType: s3
+            SigningBehavior: always
+            SigningProtocol: sigv4
+      FrontendDistribution:
+        Type: AWS::CloudFront::Distribution
+        Condition: CreateCloudFront
+        Properties:
+          DistributionConfig:
+            Enabled: true
+            Comment: ${self:service} ${sls:stage} frontend
+            DefaultRootObject: index.html
+            Aliases: []
+            Origins:
+              - Id: FrontendS3Origin
+                DomainName: !GetAtt FrontendBucket.RegionalDomainName
+                S3OriginConfig: {}
+                OriginAccessControlId: !Ref FrontendOAC
+            DefaultCacheBehavior:
+              TargetOriginId: FrontendS3Origin
+              ViewerProtocolPolicy: redirect-to-https
+              AllowedMethods: [GET, HEAD, OPTIONS]
+              CachedMethods: [GET, HEAD, OPTIONS]
+              Compress: true
+              ForwardedValues:
+                QueryString: true
+                Cookies:
+                  Forward: none
+            PriceClass: PriceClass_100
+            CustomErrorResponses:
+              - ErrorCode: 403
+                ResponseCode: 200
+                ResponsePagePath: /index.html
+                ErrorCachingMinTTL: 0
+              - ErrorCode: 404
+                ResponseCode: 200
+                ResponsePagePath: /index.html
+                ErrorCachingMinTTL: 0
+            HttpVersion: http2
+            ViewerCertificate:
+              CloudFrontDefaultCertificate: true
+      FrontendBucketPolicyForCF:
+        Type: AWS::S3::BucketPolicy
+        Condition: CreateCloudFront
+        Properties:
+          Bucket: !Ref FrontendBucket
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AllowCloudFrontRead
+                Effect: Allow
+                Principal:
+                  Service: cloudfront.amazonaws.com
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${FrontendBucket}
+                  - !Sub arn:aws:s3:::${FrontendBucket}/*
+                Condition:
+                  StringEquals:
+                    AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
+      FrontendBucketPublicRead:
+        Type: AWS::S3::BucketPolicy
+        Condition: UseS3Website
+        Properties:
+          Bucket: !Ref FrontendBucket
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PublicReadObjects
+                Effect: Allow
+                Principal: "*"
+                Action: "s3:GetObject"
+                Resource: !Sub arn:aws:s3:::${FrontendBucket}/*
+  - Outputs:
+      ApiUrl:
+        Description: "API Gateway REST endpoint base URL"
+        Value:
+          Fn::Join:
+            - ""
+            - - https://
+              - Ref: ApiGatewayRestApi
+              - .execute-api.
+              - ${aws:region}
+              - .amazonaws.com/
+              - ${sls:stage}
+      DynamoTableName:
+        Description: "DynamoDB table name"
+        Value: ${self:custom.itemsTableName}
+      CognitoUserPoolId:
+        Description: "Cognito User Pool ID"
+        Value:
+          Ref: UserPool
+      CognitoUserPoolClientId:
+        Description: "Cognito User Pool Client ID"
+        Value:
+          Ref: UserPoolClient
+      FrontendBucketName:
+        Description: "S3 bucket for hosting frontend artifacts"
+        Value: ${self:custom.frontendBucketName}
+      CloudFrontDistributionId:
+        Description: "CloudFront distribution id for frontend"
+        Condition: CreateCloudFront
+        Value: !Ref FrontendDistribution
+      FrontendUrl:
+        Description: "Frontend CloudFront URL"
+        Condition: CreateCloudFront
+        Value: !Sub https://${FrontendDistribution.DomainName}
+      WebsiteUrl:
+        Description: "S3 static website URL (used when CloudFront disabled)"
+        Value: !Sub http://${FrontendBucket}.s3-website-${AWS::Region}.amazonaws.com
 
 
