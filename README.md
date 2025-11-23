@@ -77,6 +77,23 @@ Stages derive from branch:
 - `master/main` → prod stage
 Resources are named `${service}-${stage}-*` to avoid collisions.
 
+Promotion workflow:
+- Merge PRs to `dev` → auto deploy backend (dev) and frontend (dev bucket/CFN).
+- Once verified, merge `dev` → `main` (or `master`) → auto deploy prod.
+
+Manual stage deploys:
+```bash
+cd backend
+npx serverless deploy --stage dev
+npx serverless deploy --stage prod
+```
+
+Frontend manual deploy (PowerShell):
+```powershell
+.\frontend\scripts\deploy-from-cfn.ps1 -Stage dev -Region us-east-1
+.\frontend\scripts\deploy-from-cfn.ps1 -Stage prod -Region us-east-1
+```
+
 ### Authentication
 - Cognito User Pool enforces auth on API routes via API Gateway Cognito authorizer.
 - Frontend uses Amplify Auth for signup/login/confirm and attaches JWT on API requests.
@@ -88,6 +105,13 @@ Resources are named `${service}-${stage}-*` to avoid collisions.
 - Add CI/CD screenshots under `docs/ci-cd/` (placeholders included).
 - Loom walkthrough link (update after recording):  
   `https://www.loom.com/share/REPLACE_WITH_YOUR_VIDEO_ID`
+
+Suggested walkthrough topics:
+- Repo layout, Serverless config, multi-stage naming
+- CRUD handlers and DynamoDB access
+- Cognito authorizer integration
+- CI/CD flows (backend, frontend) and secrets
+- Frontend auth flow and CRUD UI demo
 
 ### Frequent commits
 Suggested commit cadence (examples):
