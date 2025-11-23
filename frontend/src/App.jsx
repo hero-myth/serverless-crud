@@ -50,10 +50,9 @@ export default function App() {
 			<AppBar position="static">
 				<Toolbar sx={{ display: "flex", gap: 2 }}>
 					<Typography variant="h6" sx={{ flexGrow: 1 }}>
-						ServerlessGuru CRUD
+						Serverless CRUD
 					</Typography>
 					<Button color="inherit" component={RouterLink} to="/">Home</Button>
-					<Button color="inherit" component={RouterLink} to="/items">Items</Button>
 					<Button color="inherit" onClick={handleLogout}>Logout</Button>
 				</Toolbar>
 			</AppBar>

@@ -124,14 +124,14 @@ export default function Items() {
                                             </>
                                         )}
                                     </CardContent>
-                                    <CardActions sx={{ justifyContent: "space-between" }}>
+                                    <CardActions sx={{ justifyContent: "space-between", padding: '16px' }}>
                                         {editingId === item.id ? (
-                                            <div>
+                                            <div style={{ minWidth: '88px' }}>
                                                 <IconButton color="primary" onClick={() => onSaveEdit(item.id)}><SaveIcon /></IconButton>
-                                                <IconButton color="inherit" onClick={onCancelEdit}><CancelIcon /></IconButton>
+                                                <IconButton color="error" onClick={onCancelEdit}><CancelIcon /></IconButton>
                                             </div>
                                         ) : (
-                                            <div>
+                                            <div style={{ minWidth: '88px' }}>
                                                 <IconButton color="primary" onClick={() => onStartEdit(item)}><EditIcon /></IconButton>
                                                 <IconButton color="error" onClick={() => onDelete(item.id)}><DeleteIcon /></IconButton>
                                             </div>
