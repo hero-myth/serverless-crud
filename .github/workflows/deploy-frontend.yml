@@ -41,19 +41,30 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
 
-      - name: Determine target bucket and distribution
+      - name: Determine stage, stack, and bucket
         id: setvars
+        shell: bash
         run: |
           BRANCH="${GITHUB_REF##*/}"
           if [ "$BRANCH" = "dev" ]; then
-            echo "bucket=${{ secrets.FRONTEND_BUCKET_DEV }}" >> $GITHUB_OUTPUT
-            echo "dist=${{ secrets.CLOUDFRONT_DISTRIBUTION_DEV }}" >> $GITHUB_OUTPUT
+            STAGE="dev"
           else
-            echo "bucket=${{ secrets.FRONTEND_BUCKET_PROD }}" >> $GITHUB_OUTPUT
-            echo "dist=${{ secrets.CLOUDFRONT_DISTRIBUTION_PROD }}" >> $GITHUB_OUTPUT
+            STAGE="prod"
           fi
+          echo "stage=$STAGE" >> $GITHUB_OUTPUT
+
+          STACK_NAME="sguru-crud-api-$STAGE"
+          echo "stack=$STACK_NAME" >> $GITHUB_OUTPUT
+
+          BUCKET=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text || true)
+          echo "bucket=$BUCKET" >> $GITHUB_OUTPUT
+
+          # Optional: distribution id if you later output it from the stack
+          DIST=""
+          echo "dist=$DIST" >> $GITHUB_OUTPUT
 
       - name: Deploy to S3
+        if: ${{ steps.setvars.outputs.bucket != '' }}
         run: aws s3 sync ./dist s3://${{ steps.setvars.outputs.bucket }} --delete
 
       - name: Invalidate CloudFront

@@ -30,6 +30,7 @@ custom:
   cognito:
     userPoolName: ${self:service}-${sls:stage}-users
     userPoolClientName: ${self:service}-${sls:stage}-web
+  frontendBucketName: ${self:service}-${sls:stage}-frontend-${aws:accountId}-${aws:region}
 
 functions:
   createItem:
@@ -133,6 +134,17 @@ resources:
           - ALLOW_REFRESH_TOKEN_AUTH
           - ALLOW_USER_SRP_AUTH
         PreventUserExistenceErrors: ENABLED
+    FrontendBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.frontendBucketName}
+        VersioningConfiguration:
+          Status: Suspended
+        Tags:
+          - Key: service
+            Value: ${self:service}
+          - Key: stage
+            Value: ${sls:stage}
   Outputs:
     ApiUrl:
       Description: "API Gateway REST endpoint base URL"
@@ -156,5 +168,8 @@ resources:
       Description: "Cognito User Pool Client ID"
       Value:
         Ref: UserPoolClient
+    FrontendBucketName:
+      Description: "S3 bucket for hosting frontend artifacts"
+      Value: ${self:custom.frontendBucketName}
 
 
