@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { Routes, Route, Navigate, useLocation, Link as RouterLink } from "react-router-dom";
 import { AppBar, Toolbar, Typography, Button, Container, Box } from "@mui/material";
 import { signOut } from "aws-amplify/auth";
-import { configureAmplify } from "./auth/amplify.js";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Items from "./pages/Items.jsx";
@@ -35,9 +34,7 @@ const RequireAuth = ({ children }) => {
 import { useState } from "react";
 
 export default function App() {
-	useEffect(() => {
-		configureAmplify();
-	}, []);
+	// Amplify is configured by a bootstrap import in main.jsx
 
 	const handleLogout = async () => {
 		try {
