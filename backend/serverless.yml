@@ -141,11 +141,81 @@ resources:
         BucketName: ${self:custom.frontendBucketName}
         VersioningConfiguration:
           Status: Suspended
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
         Tags:
           - Key: service
             Value: ${self:service}
           - Key: stage
             Value: ${sls:stage}
+    FrontendOAC:
+      Type: AWS::CloudFront::OriginAccessControl
+      Properties:
+        OriginAccessControlConfig:
+          Name: ${self:service}-${sls:stage}-oac
+          Description: Origin access control for S3 frontend bucket
+          OriginAccessControlOriginType: s3
+          SigningBehavior: always
+          SigningProtocol: sigv4
+    FrontendDistribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          Enabled: true
+          Comment: ${self:service} ${sls:stage} frontend
+          DefaultRootObject: index.html
+          Aliases: []
+          Origins:
+            - Id: FrontendS3Origin
+              DomainName: !GetAtt FrontendBucket.RegionalDomainName
+              S3OriginConfig: {}
+              OriginAccessControlId: !Ref FrontendOAC
+          DefaultCacheBehavior:
+            TargetOriginId: FrontendS3Origin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            CachedMethods: [GET, HEAD, OPTIONS]
+            Compress: true
+            ForwardedValues:
+              QueryString: true
+              Cookies:
+                Forward: none
+          PriceClass: PriceClass_100
+          CustomErrorResponses:
+            - ErrorCode: 403
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 0
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+              ErrorCachingMinTTL: 0
+          HttpVersion: http2
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: true
+    FrontendBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref FrontendBucket
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: AllowCloudFrontRead
+              Effect: Allow
+              Principal:
+                Service: cloudfront.amazonaws.com
+              Action:
+                - s3:GetObject
+                - s3:ListBucket
+              Resource:
+                - !Sub arn:aws:s3:::${FrontendBucket}
+                - !Sub arn:aws:s3:::${FrontendBucket}/*
+              Condition:
+                StringEquals:
+                  AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
   Outputs:
     ApiUrl:
       Description: "API Gateway REST endpoint base URL"
@@ -172,5 +242,11 @@ resources:
     FrontendBucketName:
       Description: "S3 bucket for hosting frontend artifacts"
       Value: ${self:custom.frontendBucketName}
+    CloudFrontDistributionId:
+      Description: "CloudFront distribution id for frontend"
+      Value: !Ref FrontendDistribution
+    FrontendUrl:
+      Description: "Frontend CloudFront URL"
+      Value: !Sub https://${FrontendDistribution.DomainName}
 
 

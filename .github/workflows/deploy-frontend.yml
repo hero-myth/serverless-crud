@@ -59,8 +59,8 @@ jobs:
           BUCKET=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='FrontendBucketName'].OutputValue" --output text || true)
           echo "bucket=$BUCKET" >> $GITHUB_OUTPUT
 
-          # Optional: distribution id if you later output it from the stack
-          DIST=""
+          # CloudFront distribution id from stack output
+          DIST=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text || true)
           echo "dist=$DIST" >> $GITHUB_OUTPUT
 
       - name: Deploy to S3
