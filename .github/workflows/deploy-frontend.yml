@@ -1,0 +1,63 @@
+name: Deploy Frontend (S3/CloudFront)
+
+on:
+  push:
+    branches: ["dev", "master", "main"]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy-frontend.yml"
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_AWS_REGION: ${{ secrets.VITE_AWS_REGION }}
+          VITE_COGNITO_USER_POOL_ID: ${{ secrets.VITE_COGNITO_USER_POOL_ID }}
+          VITE_COGNITO_USER_POOL_CLIENT_ID: ${{ secrets.VITE_COGNITO_USER_POOL_CLIENT_ID }}
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+      - name: Determine target bucket and distribution
+        id: setvars
+        run: |
+          BRANCH="${GITHUB_REF##*/}"
+          if [ "$BRANCH" = "dev" ]; then
+            echo "bucket=${{ secrets.FRONTEND_BUCKET_DEV }}" >> $GITHUB_OUTPUT
+            echo "dist=${{ secrets.CLOUDFRONT_DISTRIBUTION_DEV }}" >> $GITHUB_OUTPUT
+          else
+            echo "bucket=${{ secrets.FRONTEND_BUCKET_PROD }}" >> $GITHUB_OUTPUT
+            echo "dist=${{ secrets.CLOUDFRONT_DISTRIBUTION_PROD }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to S3
+        run: aws s3 sync ./dist s3://${{ steps.setvars.outputs.bucket }} --delete
+
+      - name: Invalidate CloudFront
+        if: ${{ steps.setvars.outputs.dist != '' }}
+        run: aws cloudfront create-invalidation --distribution-id ${{ steps.setvars.outputs.dist }} --paths "/*"
+
+
