@@ -1,0 +1,6 @@
+/* Minimal global styles. All layout via MUI components and sx props. */
+html, body, #root {
+	height: 100%;
+}
+
+
