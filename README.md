@@ -52,6 +52,13 @@ npm run dev
 ```
 Open http://localhost:5173, sign up, confirm, login, then create/read/update/delete items.
 
+Local deploy helper (optional):
+```bash
+# From repo root on Windows PowerShell
+.\frontend\scripts\deploy-from-cfn.ps1 -Stage dev -Region us-east-1
+```
+This script reads the CloudFormation outputs to find the S3 bucket (and CloudFront id if present), builds the app, syncs to S3, and invalidates CloudFront when available.
+
 ### CI/CD (GitHub Actions)
 - Backend:
   - `.github/workflows/deploy-backend-dev.yml` on push to `dev` → `sls deploy --stage dev`
