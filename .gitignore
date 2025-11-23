@@ -6,9 +6,6 @@ dist/
 *.log
 .env
 *.local
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
 
 frontend/node_modules/
 frontend/dist/
