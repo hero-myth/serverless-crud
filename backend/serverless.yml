@@ -33,6 +33,7 @@ custom:
     userPoolClientName: ${self:service}-${sls:stage}-web
   frontendBucketName: ${self:service}-${sls:stage}-frontend-${aws:accountId}-${aws:region}
   cloudfrontEnabled: ${env:CLOUDFRONT_ENABLED, 'false'}
+  publicWebsitePolicyEnabled: ${env:PUBLIC_WEBSITE_POLICY, 'false'}
 
 functions:
   createItem:
@@ -106,6 +107,14 @@ resources:
         Fn::Equals:
           - ${self:custom.cloudfrontEnabled}
           - "false"
+      PublicWebsitePolicyEnabled:
+        Fn::Equals:
+          - ${self:custom.publicWebsitePolicyEnabled}
+          - "true"
+      UseS3WebsiteAndPublic:
+        Fn::And:
+          - Condition: UseS3Website
+          - Condition: PublicWebsitePolicyEnabled
   - Resources: ${file(resources/core.yml)}
   - Resources:
       FrontendBucket:
@@ -192,7 +201,7 @@ resources:
                     AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
       FrontendBucketPublicRead:
         Type: AWS::S3::BucketPolicy
-        Condition: UseS3Website
+        Condition: UseS3WebsiteAndPublic
         Properties:
           Bucket: !Ref FrontendBucket
           PolicyDocument:
