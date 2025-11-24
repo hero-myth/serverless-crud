@@ -98,8 +98,58 @@ Frontend manual deploy (PowerShell):
 - Cognito User Pool enforces auth on API routes via API Gateway Cognito authorizer.
 - Frontend uses Amplify Auth for signup/login/confirm and attaches JWT on API requests.
 
+### API Routes
+- POST `/items` → create item
+- GET `/items/{id}` → read item
+- GET `/items` → list items
+- PUT `/items/{id}` → update item
+- DELETE `/items/{id}` → delete item
+All routes require a valid Cognito JWT (attached by the frontend).  
+
+### CORS
+- Default: `*`
+- Set a stricter origin by exporting `CORS_ORIGIN=https://your-frontend-domain` before deploy.
+
 ### Responsive & Design
 - MUI responsive grid/cards; layouts adapt to xs/sm/md/lg.
+
+### Tests
+- Backend unit tests (Vitest):
+  ```bash
+  cd backend
+  npm ci
+  npm test
+  ```
+- Backend integration test (requires a test user in Cognito; configure `backend/.env`):
+  ```bash
+  # backend/.env keys:
+  # API_BASE_URL, COGNITO_REGION, COGNITO_USER_POOL_ID, COGNITO_CLIENT_ID, TEST_USER_EMAIL, TEST_USER_PASSWORD
+  cd backend
+  npm run itest
+  ```
+- Frontend tests:
+  ```bash
+  cd frontend
+  npm ci
+  npm test
+  ```
+
+### Load testing (k6)
+Generate a short‑lived JWT and run k6:
+```bash
+cd backend
+node scripts/get-token.mjs > token.txt
+k6 run \
+  --env API_BASE_URL="https://<api-id>.execute-api.<region>.amazonaws.com/dev" \
+  --env TOKEN="$(cat token.txt)" \
+  --env VUS=10 --env DURATION=2m \
+  loadtest/k6-crud.js
+```
+Optionally export a JSON summary with `--summary-export ./reports/k6-summary.json`.
+
+### CloudFront toggle
+- If your account doesn’t allow CloudFront creation, leave `CLOUDFRONT_ENABLED` unset/false. The stack will configure an S3 static website and output `WebsiteUrl`.
+- To enable CloudFront, set `CLOUDFRONT_ENABLED=true` and redeploy. The stack outputs `FrontendUrl` and `CloudFrontDistributionId`. The frontend CI workflow will invalidate CloudFront automatically.
 
 ### Screenshots & Video
 - Add CI/CD screenshots under `docs/ci-cd/` (placeholders included).
@@ -112,6 +162,27 @@ Suggested walkthrough topics:
 - Cognito authorizer integration
 - CI/CD flows (backend, frontend) and secrets
 - Frontend auth flow and CRUD UI demo
+
+### Troubleshooting
+- Actions disabled: enable in repo/org settings; ensure path filters match your changes.
+- Cognito permissions: the CI IAM principal needs `cognito-idp:*` basic CRUD on user pools/clients (see policy example in conversation).
+- API Gateway logging role error: either grant IAM to create the role or keep `provider.logs.restApi: false`.
+- CloudFront access denied / verification required: deploy without CloudFront (toggle off) or contact AWS Support to verify the account, then enable.
+- S3 deep-link 404s: the app uses HashRouter to avoid rewrites; open `/#/` routes.
+- Amplify not configured: ensure all `VITE_*` envs are set in CI and local `.env`.
+
+### Frequently used commands
+```bash
+# Backend deploy/remove
+cd backend && npx serverless deploy --stage dev
+cd backend && npx serverless remove --stage dev
+
+# Show stack outputs
+aws cloudformation describe-stacks --stack-name sguru-crud-api-dev --query "Stacks[0].Outputs" --output table
+
+# Frontend manual deploy (PowerShell)
+.\frontend\scripts\deploy-from-cfn.ps1 -Stage dev -Region us-east-1
+```
 
 ### Frequent commits
 Suggested commit cadence (examples):
