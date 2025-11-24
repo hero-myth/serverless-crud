@@ -152,7 +152,25 @@ Optionally export a JSON summary with `--summary-export ./reports/k6-summary.jso
 - To enable CloudFront, set `CLOUDFRONT_ENABLED=true` and redeploy. The stack outputs `FrontendUrl` and `CloudFrontDistributionId`. The frontend CI workflow will invalidate CloudFront automatically.
 
 ### Screenshots & Video
-- Add CI/CD screenshots under `docs/ci-cd/` (placeholders included).
+- Add CI/CD screenshots under `docs/ci-cd/` using these exact filenames (redact secrets):
+  - `01-gh-actions-secrets.png` (Repo Settings → Actions → Secrets)
+  - `02-gh-actions-backend-dev-success.png` (Deploy Backend dev run)
+  - `03-gh-actions-frontend-dev-success.png` (Deploy Frontend dev run)
+  - `10-cfn-outputs-dev.png` (CloudFormation dev stack Outputs)
+  - `11-s3-frontend-bucket.png` (S3 bucket contents after deploy)
+  - `12-apigw-stages.png` (API Gateway dev stage)
+  - `13-cognito-user-pool.png` (Cognito pool + app client)
+  - `20-frontend-live-login.png` (Live frontend home page)
+  - `21-frontend-items-crud.png` (Items CRUD working)
+  - `22-responsive-breakpoints-laptop.png`, `23-responsive-breakpoints-tablet.png`, `24-responsive-breakpoints-mobile.png` (Responsive views)
+
+Example references in markdown:
+```markdown
+![Actions secrets](docs/ci-cd/01-gh-actions-secrets.png)
+![Backend dev deploy](docs/ci-cd/02-gh-actions-backend-dev-success.png)
+![CFN outputs (dev)](docs/ci-cd/10-cfn-outputs-dev.png)
+![Frontend live](docs/ci-cd/20-frontend-live-login.png)
+```
 - Loom walkthrough link (update after recording):  
   `https://www.loom.com/share/REPLACE_WITH_YOUR_VIDEO_ID`
 
