@@ -8,6 +8,14 @@ End-to-end example that provisions an AWS API Gateway REST API with 5 Lambdas (C
 - **Frontend**: React + MUI + Amplify Auth. Responsive for xs/sm/md/lg
 - **CI/CD**: GitHub Actions deploys backend per stage; frontend to S3 + optional CloudFront
 
+### Deployed URLs
+- Dev
+  - Backend API: https://og00syeotk.execute-api.us-east-1.amazonaws.com/dev
+  - Frontend (S3 website): http://sguru-crud-api-dev-frontend-207662791582-us-east-1.s3-website-us-east-1.amazonaws.com
+- Prod
+  - Backend API: https://sxyqc7ksha.execute-api.us-east-1.amazonaws.com/prod
+  - Frontend (S3 website): http://sguru-crud-api-prod-frontend-207662791582-us-east-1.s3-website-us-east-1.amazonaws.com/
+
 ### Repo layout
 - `backend/`: Serverless Framework app (Node.js 20)
 - `frontend/`: React (Vite) + Material UI + Amplify Auth
@@ -201,16 +209,6 @@ aws cloudformation describe-stacks --stack-name sguru-crud-api-dev --query "Stac
 # Frontend manual deploy (PowerShell)
 .\frontend\scripts\deploy-from-cfn.ps1 -Stage dev -Region us-east-1
 ```
-
-### Frequent commits
-Suggested commit cadence (examples):
-- chore(init): scaffold repo with backend, frontend, workflows
-- feat(backend): add DynamoDB table and CRUD Lambdas
-- feat(auth): add Cognito User Pool + API authorizer
-- feat(frontend): add Auth (Amplify) and responsive UI
-- ci(backend): add GHA deploy for dev/prod
-- ci(frontend): add GHA S3/CloudFront deploy
-- docs: update README with setup and screenshots
 
 ### Optional additions included
 - Cognito signup/login, API protection
